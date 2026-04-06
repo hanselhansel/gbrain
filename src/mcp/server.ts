@@ -7,10 +7,11 @@ import { expandQuery } from '../core/search/expansion.ts';
 import { chunkText } from '../core/chunkers/recursive.ts';
 import { embedBatch } from '../core/embedding.ts';
 import type { ChunkInput } from '../core/types.ts';
+import { VERSION } from '../version.ts';
 
 export async function startMcpServer(engine: BrainEngine) {
   const server = new Server(
-    { name: 'gbrain', version: '0.1.0' },
+    { name: 'gbrain', version: VERSION },
     { capabilities: { tools: {} } },
   );
 
