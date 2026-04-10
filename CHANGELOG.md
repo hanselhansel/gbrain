@@ -2,6 +2,16 @@
 
 All notable changes to GBrain will be documented in this file.
 
+## [0.5.0] - 2026-04-10
+
+### Added
+
+- SKILLPACK Section 18: Live Sync (MUST ADD). Contract-first guide for keeping the vector DB current with the brain repo automatically. Documents Session mode pooler prerequisite, sync+embed primitives, four approaches (cron, --watch, webhook, git hook), isSyncable exclusions, silent skip warning, --watch exit-after-5-failures behavior, and OpenClaw/Hermes cron registration examples.
+- `docs/GBRAIN_VERIFY.md`: Installation verification runbook with 6 checks. The critical test: push a change, wait for sync, search for corrected text. Includes coverage check (page count vs file count), embed check, and end-to-end sync test.
+- Setup skill Phase H (Live Sync Setup, MUST ADD) and Phase I (Full Verification). Phase H covers pooler check, automatic sync configuration, and sync+embed chaining. Phase I runs the full GBRAIN_VERIFY.md runbook.
+- README install steps 8 (automatic sync) and 9 (verification runbook). GBRAIN_VERIFY.md added to docs section.
+- CLAUDE.md: `source ~/.zshrc` instruction for loading API keys (OPENAI_API_KEY, ANTHROPIC_API_KEY) before Tier 2 tests.
+
 ## [0.4.1] - 2026-04-09
 
 ### Added
