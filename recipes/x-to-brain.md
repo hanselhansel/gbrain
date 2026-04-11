@@ -133,7 +133,7 @@ curl -sf -H "Authorization: Bearer $X_BEARER_TOKEN" \
   "https://api.x.com/2/users/by/username/USERNAME" | grep -o '"id":"[^"]*"'
 ```
 
-Ask the user for their X handle (e.g., @garrytan). Look up their user ID.
+Ask the user for their X handle (e.g., @yourhandle). Look up their user ID.
 Save it — the collector needs the numeric ID, not the handle.
 
 ### Step 3: Configure the Collector

@@ -23,7 +23,7 @@ That's what happens when markdown is code.
 Here's a real skill file. This one teaches an AI agent to screen phone calls:
 
 ```markdown
-# Voice Agent — 510-MY-GARRY
+# Voice Agent — Your Phone Number
 
 Caller → Twilio → <Stream> WebSocket → Voice Server (port 8765)
                                             ↕ audio
@@ -35,8 +35,8 @@ Caller → Twilio → <Stream> WebSocket → Voice Server (port 8765)
 
 Every inbound call routes based on caller phone number + brain lookup:
 
-### Garry → Authenticated Mode
-- Send crypto-random 6-digit code to Telegram
+### Owner → Authenticated Mode
+- Send crypto-random 6-digit code to secure channel
 - Caller reads it back
 - Match → full assistant mode (brain, calendar, scheduling)
 - No match → treated as unknown caller
