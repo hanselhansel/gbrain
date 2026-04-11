@@ -18,7 +18,7 @@ for (const op of operations) {
 }
 
 // CLI-only commands that bypass the operation layer
-const CLI_ONLY = new Set(['init', 'upgrade', 'check-update', 'integrations', 'import', 'export', 'files', 'embed', 'serve', 'call', 'config', 'doctor', 'migrate']);
+const CLI_ONLY = new Set(['init', 'upgrade', 'post-upgrade', 'check-update', 'integrations', 'import', 'export', 'files', 'embed', 'serve', 'call', 'config', 'doctor', 'migrate']);
 
 async function main() {
   const args = process.argv.slice(2);
@@ -230,6 +230,11 @@ async function handleCliOnly(command: string, args: string[]) {
   if (command === 'upgrade') {
     const { runUpgrade } = await import('./commands/upgrade.ts');
     await runUpgrade(args);
+    return;
+  }
+  if (command === 'post-upgrade') {
+    const { runPostUpgrade } = await import('./commands/upgrade.ts');
+    runPostUpgrade();
     return;
   }
   if (command === 'check-update') {
