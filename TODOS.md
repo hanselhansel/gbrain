@@ -1,5 +1,58 @@
 # TODOS
 
+## P1 (BrainBench v1.1 — categories deferred from PR #188)
+
+### BrainBench Cat 5: Source Attribution / Provenance
+**What:** Eval that gbrain correctly cites the right page when claiming fact F, and resolves source-conflict cases (3 sources disagree on $5M raise — which wins?). 200 queries across citation/provenance/conflict sub-categories on a 300-entity dataset with deliberately-conflicting sources.
+
+**Why deferred from PR #188:** Needs ~$100-200 of Opus tokens to generate the conflict-graph dataset. v1 scope was procedural-only.
+
+**Threshold:** citation_recall > 90%, citation_precision > 85%, conflict_resolution > 70%.
+
+**Depends on:** Identity Resolution (Cat 3) shipped — uses same world generator pattern.
+
+### BrainBench Cat 6: Auto-link Precision under Prose (at scale)
+**What:** Cat 10 (Robustness/Adversarial) covered code-fence leak and false-positive substrings on 22 hand-crafted cases. v1.1 extends this to 500+ prose-heavy pages with realistic narrative noise. Tests link precision in the wild, not just edge cases.
+
+**Why deferred from PR #188:** Needs prose-heavy generated corpus (~$100-150 Opus). Existing 22-case eval already caught + fixed the code-fence leak bug.
+
+**Threshold:** link_precision > 95% on prose, type_accuracy > 80% on varied phrasing.
+
+### BrainBench Cat 8: Skill Behavior Compliance
+**What:** Replays 100 inbound signals through a real LLM agent loop with gbrain skills loaded. Measures: brain-first lookup compliance, back-link iron-law adherence, citation format compliance, tier escalation correctness.
+
+**Why deferred:** Needs real LLM API loop (~$2K total — most expensive single category).
+
+**Threshold:** brain_first_compliance > 95%, back_link_compliance > 90%, citation_format > 95%.
+
+### BrainBench Cat 9: End-to-End Workflows
+**What:** 50 end-to-end scenarios across meeting ingestion, email-to-brain, daily-task-prep, briefing generation, sync cycle. Rubric-graded (10-15 criteria each).
+
+**Why deferred:** Needs LLM agent loop (~$1K). Plus 50 hand-built rubrics.
+
+**Threshold:** 80% scenario pass rate per workflow.
+
+### BrainBench Cat 11: Multi-modal Ingestion
+**What:** PDF/image/audio/video ingestion accuracy. 50 PDFs, 30 images, 20 audio files, 10 videos, 30 HTML pages. Per-modality recall and fidelity metrics.
+
+**Why deferred:** Needs licensed real datasets (Common Voice for audio etc.). Dataset curation is the bulk of the work.
+
+**Threshold:** PDF text fidelity > 95% (text-based) / > 80% (scanned), audio WER < 15%, entity_recall > 80% post-ingestion.
+
+### BrainBench Cat 1+2 at full scale
+**What:** Existing benchmark-search-quality.ts (29 pages, 20 queries) and benchmark-graph-quality.ts (80 pages, 5 queries) currently pass at small scale. v1.1 extends both to 2-3K rich-prose pages generated via Opus to surface scale-dependent failures (tied keyword clusters, hub-node fan-out, prose-noise extraction precision).
+
+**Why deferred from PR #188:** Needs ~$200-300 of Opus tokens for the rich corpus. The 80-page version already proves algorithmic correctness; scale-up proves it survives real-world load.
+
+**Threshold:** maintain v1 metrics at 30x scale.
+
+### v0.10.4: gbrain alias resolution feature (driven by Cat 3)
+**What:** Add an alias table to gbrain so "Sarah Chen" / "S. Chen" / "@schen" / "sarah.chen@example.com" resolve to one canonical entity. Schema: `aliases (id, slug, alias_text)` with a unique index. Search blends alias matches into hybrid scoring.
+
+**Why:** BrainBench Cat 3 measured 31% recall on undocumented aliases — that's the v0.10.x baseline. With alias table, should jump to 80%+.
+
+**Depends on:** Cat 3 baseline (shipped in PR #188).
+
 ## P1
 
 ### Batch embedding queue across files
