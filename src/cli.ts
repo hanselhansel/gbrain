@@ -18,7 +18,7 @@ for (const op of operations) {
 }
 
 // CLI-only commands that bypass the operation layer
-const CLI_ONLY = new Set(['init', 'upgrade', 'post-upgrade', 'check-update', 'integrations', 'publish', 'check-backlinks', 'lint', 'report', 'import', 'export', 'files', 'embed', 'serve', 'call', 'config', 'doctor', 'migrate', 'eval', 'sync', 'extract', 'features', 'autopilot', 'jobs', 'apply-migrations']);
+const CLI_ONLY = new Set(['init', 'upgrade', 'post-upgrade', 'check-update', 'integrations', 'publish', 'check-backlinks', 'lint', 'report', 'import', 'export', 'files', 'embed', 'serve', 'call', 'config', 'doctor', 'migrate', 'eval', 'sync', 'extract', 'features', 'autopilot', 'jobs', 'apply-migrations', 'skillpack-check']);
 
 async function main() {
   const args = process.argv.slice(2);
@@ -288,6 +288,13 @@ async function handleCliOnly(command: string, args: string[]) {
     // `gbrain init --migrate-only` and `gbrain jobs smoke`.
     const { runApplyMigrations } = await import('./commands/apply-migrations.ts');
     await runApplyMigrations(args);
+    return;
+  }
+  if (command === 'skillpack-check') {
+    // Agent-readable health report. Shells out to doctor + apply-migrations
+    // internally; does not need its own DB connection.
+    const { runSkillpackCheck } = await import('./commands/skillpack-check.ts');
+    await runSkillpackCheck(args);
     return;
   }
   if (command === 'doctor') {

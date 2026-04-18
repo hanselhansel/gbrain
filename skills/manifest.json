@@ -138,6 +138,11 @@
       "name": "skillify",
       "path": "skillify/SKILL.md",
       "description": "Meta skill. Turn any raw feature into a properly-skilled, tested, resolvable, evaled unit. Paired with gbrain check-resolvable gives user-controllable auto-skill-creation."
+    },
+    {
+      "name": "skillpack-check",
+      "path": "skillpack-check/SKILL.md",
+      "description": "Agent-readable gbrain health report. Wraps doctor + apply-migrations --list into one JSON blob with exit codes. Cron-friendly for morning-briefing pipelines."
     }
   ],
   "dependencies": {
