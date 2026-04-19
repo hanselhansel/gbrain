@@ -12,3 +12,6 @@ supabase/.temp/
 .claude/skills/
 .idea
 eval/reports/
+
+# Bun build cache artifacts
+.*-00000000.bun-build
