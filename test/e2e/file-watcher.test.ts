@@ -4,6 +4,10 @@ import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { createFileWatcher, type FileWatcher } from '../../src/mcp/file-watcher.ts';
+import { createEngine } from '../../src/core/engine-factory.ts';
+import { importFromFile } from '../../src/core/import-file.ts';
+import { basename, relative } from 'path';
+import type { BrainEngine } from '../../src/core/engine.ts';
 
 describe('file-watcher', () => {
   let watchDir: string;
@@ -91,5 +95,52 @@ describe('file-watcher', () => {
     await new Promise((r) => setTimeout(r, 600));
 
     expect(changes).toHaveLength(0);
+  });
+});
+
+describe('file-watcher + engine integration', () => {
+  let watchDir: string;
+  let dataDir: string;
+  let engine: BrainEngine;
+  let watcher: FileWatcher | null = null;
+
+  beforeEach(async () => {
+    watchDir = mkdtempSync(join(tmpdir(), 'gbrain-watch-integ-'));
+    dataDir = mkdtempSync(join(tmpdir(), 'gbrain-data-integ-'));
+    engine = await createEngine({ engine: 'pglite', database_path: dataDir });
+    await engine.connect({ engine: 'pglite', database_path: dataDir });
+    await engine.initSchema();
+  });
+
+  afterEach(async () => {
+    if (watcher) await watcher.stop();
+    await engine.disconnect();
+    rmSync(watchDir, { recursive: true, force: true });
+    rmSync(dataDir, { recursive: true, force: true });
+  });
+
+  it('imports a new markdown file into the engine within 5 seconds', async () => {
+    watcher = createFileWatcher({
+      dir: watchDir,
+      debounceMs: 100,
+      onChange: async (path) => {
+        const rel = relative(watchDir, path);
+        await importFromFile(engine, path, rel, { noEmbed: true });
+      },
+    });
+    await watcher.start();
+
+    const filePath = join(watchDir, 'integ.md');
+    writeFileSync(
+      filePath,
+      `---\ntitle: "Integration Test Page"\ntype: reference\n---\n\n# Integration\n\nThis is a test.\n`
+    );
+
+    // Wait for watcher debounce + import (awaitWriteFinish adds ~300ms)
+    await new Promise((r) => setTimeout(r, 2000));
+
+    const page = await engine.getPage('integ');
+    expect(page).toBeTruthy();
+    expect(page?.title).toBe('Integration Test Page');
   });
 });
