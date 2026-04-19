@@ -131,15 +131,18 @@ export async function startMcpServer(engine: BrainEngine, opts: StartMcpServerOp
   }
 
   // Shutdown cleanup: drain watcher before process exits so nothing calls the
-  // engine after close.
+  // engine after close. Use `process.once` so listeners don't accumulate across
+  // repeat calls to startMcpServer, and explicitly call process.exit(0) after
+  // the watcher drains — relying on stdio drain alone can hang.
   const shutdown = async () => {
     if (watcher) {
       try { await watcher.stop(); } catch { /* best effort */ }
       watcher = null;
     }
+    process.exit(0);
   };
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
+  process.once('SIGINT', shutdown);
+  process.once('SIGTERM', shutdown);
 }
 
 // Backward compat: used by `gbrain call` command
