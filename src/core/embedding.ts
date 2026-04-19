@@ -9,7 +9,12 @@
 
 import OpenAI from 'openai';
 
-const MODEL = 'text-embedding-3-large';
+// Patched by Hansel 2026-04-19: switched from text-embedding-3-large to -3-small.
+// Reasons: (1) Hansel's OpenAI project key doesn't have access to -large, (2)
+// -small is ~6.5x cheaper per token ($0.02 vs $0.13 per MTok) and sufficient
+// for personal knowledge, (3) both report 1536-dim so no schema migration.
+// Override via env: GBRAIN_EMBEDDING_MODEL=text-embedding-3-large gbrain embed --stale
+const MODEL = process.env.GBRAIN_EMBEDDING_MODEL || 'text-embedding-3-small';
 const DIMENSIONS = 1536;
 const MAX_CHARS = 8000;
 const MAX_RETRIES = 5;
