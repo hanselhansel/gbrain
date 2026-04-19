@@ -1,11 +1,18 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { relative } from 'path';
 import type { BrainEngine } from '../core/engine.ts';
 import { operations, OperationError } from '../core/operations.ts';
 import type { Operation, OperationContext } from '../core/operations.ts';
 import { loadConfig } from '../core/config.ts';
 import { VERSION } from '../version.ts';
+import { createFileWatcher, type FileWatcher } from './file-watcher.ts';
+import { importFromFile } from '../core/import-file.ts';
+
+export interface StartMcpServerOptions {
+  watchDir?: string;
+}
 
 /** Validate required params exist and have the expected type */
 function validateParams(op: Operation, params: Record<string, unknown>): string | null {
@@ -26,7 +33,7 @@ function validateParams(op: Operation, params: Record<string, unknown>): string 
   return null;
 }
 
-export async function startMcpServer(engine: BrainEngine) {
+export async function startMcpServer(engine: BrainEngine, opts: StartMcpServerOptions = {}) {
   const server = new Server(
     { name: 'gbrain', version: VERSION },
     { capabilities: { tools: {} } },
@@ -95,6 +102,44 @@ export async function startMcpServer(engine: BrainEngine) {
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
+
+  // Optional file-watcher: reindexes markdown changes in-process so external
+  // CLI writes aren't needed while MCP is up. Resolves SP5 (PGLite single-writer
+  // lock friction). See ~/hansel-brain/RUNBOOK.md known-issue #4.
+  let watcher: FileWatcher | null = null;
+  if (opts.watchDir) {
+    const watchDir = opts.watchDir;
+    watcher = createFileWatcher({
+      dir: watchDir,
+      debounceMs: 2000,
+      onChange: async (path) => {
+        try {
+          const rel = relative(watchDir, path);
+          await importFromFile(engine, path, rel);
+          process.stderr.write(`[gbrain-watcher] reindexed ${path}\n`);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          process.stderr.write(`[gbrain-watcher] failed to reindex ${path}: ${msg}\n`);
+        }
+      },
+      onError: (err) => {
+        process.stderr.write(`[gbrain-watcher] error: ${err.message}\n`);
+      },
+    });
+    await watcher.start();
+    process.stderr.write(`[gbrain-watcher] watching ${watchDir}\n`);
+  }
+
+  // Shutdown cleanup: drain watcher before process exits so nothing calls the
+  // engine after close.
+  const shutdown = async () => {
+    if (watcher) {
+      try { await watcher.stop(); } catch { /* best effort */ }
+      watcher = null;
+    }
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
 
 // Backward compat: used by `gbrain call` command
