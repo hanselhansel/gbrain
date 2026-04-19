@@ -96,6 +96,43 @@ describe('file-watcher', () => {
 
     expect(changes).toHaveLength(0);
   });
+
+  it('stop() waits for in-flight onChange calls to complete', async () => {
+    let onChangeStarted = false;
+    let onChangeCompleted = false;
+    watcher = createFileWatcher({
+      dir: watchDir,
+      debounceMs: 50,
+      onChange: async () => {
+        onChangeStarted = true;
+        await new Promise((r) => setTimeout(r, 300));
+        onChangeCompleted = true;
+      },
+    });
+    await watcher.start();
+
+    const filePath = join(watchDir, 'slow.md');
+    writeFileSync(filePath, '# slow\n');
+
+    // Wait for chokidar awaitWriteFinish (~300ms) + debounce (50ms) so
+    // the onChange handler has begun, but not long enough to finish its 300ms body.
+    const deadline = Date.now() + 2000;
+    while (!onChangeStarted && Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 25));
+    }
+    expect(onChangeStarted).toBe(true);
+    expect(onChangeCompleted).toBe(false);
+
+    const stopStart = Date.now();
+    await watcher.stop();
+    const stopDuration = Date.now() - stopStart;
+    watcher = null;
+
+    // stop() must NOT resolve before the in-flight onChange finishes.
+    expect(onChangeCompleted).toBe(true);
+    // Sanity: stop waited at least a little for the remaining work.
+    expect(stopDuration).toBeGreaterThanOrEqual(30);
+  });
 });
 
 describe('file-watcher + engine integration', () => {
